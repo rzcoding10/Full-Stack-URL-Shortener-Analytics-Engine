@@ -1,99 +1,100 @@
+const asyncHandler = require('express-async-handler');
 const Link = require('../models/Link.js');
-const Click = require('../models/Click');
-const User = require('../models/User');
+const { isValidUrl } = require('../utils/validateUrl');
 
-// --- HELPER FUNCTION: Generate a random 7-character string ---
-const generateHash = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < 7; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-};
+// Import the services
+const { createUniqueLink } = require('../services/urlService');
+const { trackClick, getLinkMetrics } = require('../services/analyticsService');
 
 // --- 1. CREATE A SHORT URL ---
-exports.createShortLink = async (req, res) => {
-    try {
-        const { originalUrl } = req.body;
-        
-        if (!originalUrl) {
-            return res.status(400).json({ success: false, message: 'Please provide an original URL' });
-        }
-
-        // Keep generating a hash until we find a unique one
-        let hash = generateHash();
-        let hashExists = await Link.findOne({ shortUrl: hash });
-        while (hashExists) {
-            hash = generateHash();
-            hashExists = await Link.findOne({ shortUrl: hash });
-        }
-
-        // Determine if user is logged in (from auth middleware, which we'll build later)
-        const userId = req.user ? req.user._id : null;
-
-        const newLink = await Link.create({
-            originalUrl,
-            shortUrl: hash,
-            userId
-        });
-
-        const fullShortUrl = `${req.protocol}://${req.get("host")}/${hash}`;
-
-        res.status(201).json({
-            success: true,
-            data: {
-                originalUrl: newLink.originalUrl,
-                shortUrl: fullShortUrl,
-                hash: newLink.shortUrl
-            }
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+exports.createShortLink = asyncHandler(async (req, res) => {
+    const { originalUrl } = req.body;
+    
+    if (!originalUrl || !isValidUrl(originalUrl)) {
+        res.status(400);
+        throw new Error('Please provide a valid URL starting with http:// or https://');
     }
-};
+
+    const userId = req.user ? req.user._id : null;
+
+    const newLink = await createUniqueLink(originalUrl, userId);
+    const fullShortUrl = `${req.protocol}://${req.get("host")}/${newLink.shortUrl}`;
+
+    res.status(201).json({
+        success: true,
+        data: {
+            originalUrl: newLink.originalUrl,
+            shortUrl: fullShortUrl,
+            hash: newLink.shortUrl
+        }
+    });
+});
 
 // --- 2. REDIRECT TO ORIGINAL URL & TRACK CLICK ---
-exports.redirectUrl = async (req, res) => {
-    try {
-        const { hash } = req.params;
-        const link = await Link.findOne({ shortUrl: hash });
+exports.redirectUrl = asyncHandler(async (req, res) => {
+    const { hash } = req.params;
+    const link = await Link.findOne({ shortUrl: hash });
 
-        if (!link) {
-            // Redirect to a 404 page on your frontend (we will configure this later)
-            return res.redirect(`${req.protocol}://${req.get("host")}/not-found`);
-        }
-
-        // Track the click for analytics
-        await Click.create({
-            linkId: link._id,
-            ipAddress: req.ip,
-            userAgent: req.headers['user-agent']
-        });
-
-        // Redirect the user
-        return res.redirect(link.originalUrl);
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Server error during redirection' });
+    if (!link) {
+        return res.redirect(`${req.protocol}://${req.get("host")}/not-found`);
     }
-};
+
+    if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
+        res.status(410);
+        throw new Error('This link has expired');
+    }
+
+    const userAgent = req.headers['user-agent'];
+    const referrer = req.headers.referer || req.headers.referrer;
+
+    await trackClick(link._id, req.ip, userAgent, referrer);
+
+    return res.redirect(link.originalUrl);
+});
 
 // --- 3. GET USER'S DASHBOARD URLS ---
-exports.getUserLinks = async (req, res) => {
-    try {
-        // req.user will be populated by your auth middleware
-        if (!req.user) {
-            return res.status(401).json({ success: false, message: 'Unauthorized' });
-        }
-
-        const links = await Link.find({ userId: req.user._id }).sort({ createdAt: -1 });
-
-        res.status(200).json({
-            success: true,
-            count: links.length,
-            data: links
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+exports.getUserLinks = asyncHandler(async (req, res) => {
+    if (!req.user) {
+        res.status(401);
+        throw new Error('Unauthorized');
     }
-};
+
+    const links = await Link.find({ userId: req.user._id }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+        success: true,
+        count: links.length,
+        data: links
+    });
+});
+
+// --- 4. GET LINK ANALYTICS ---
+exports.getAnalytics = asyncHandler(async (req, res) => {
+    const { hash } = req.params;
+    
+    // Find the link
+    const link = await Link.findOne({ shortUrl: hash });
+    
+    if (!link) {
+        res.status(404);
+        throw new Error('Link not found');
+    }
+
+    // Verify ownership
+    if (!req.user || link.userId?.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error('Not authorized to view these analytics');
+    }
+
+    // Fetch aggregated metrics
+    const metrics = await getLinkMetrics(link._id);
+
+    res.status(200).json({
+        success: true,
+        data: {
+            totalClicks: link.totalClicks,
+            lastVisited: link.lastVisited,
+            metrics
+        }
+    });
+});

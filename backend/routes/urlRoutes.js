@@ -3,20 +3,27 @@ const router = express.Router();
 const { 
     createShortLink, 
     redirectUrl, 
-    getUserLinks 
+    getUserLinks,
+    getAnalytics
 } = require('../controllers/urlController');
 
-// We will build this middleware next, but we declare it here
-const { protect } = require('../middleware/authMiddleware');
+// Middlewares
+const { apiLimiter } = require('../middleware/rateLimiter');
+const { protect, optionalAuth } = require('../middleware/authMiddleware'); // Import optionalAuth
 
-// Route 1: Create a new short link (POST /api/url/shorten)
-router.post('/shorten', createShortLink);
+// Route 1: Create a new short link
+// optionalAuth checks for a user, apiLimiter prevents spam, createShortLink saves it
+router.post('/shorten', optionalAuth, apiLimiter, createShortLink);
 
-// Route 2: Get all links for the logged-in user (GET /api/url/my-links)
-// router.get('/my-links', protect, getUserLinks); // Commented out until auth is built
+// Route 2: Get all links for the logged-in user
+// protect STRICTLY requires a logged-in user
+router.get('/my-links', protect, getUserLinks); 
 
-// Route 3: Redirect to the original URL (GET /api/url/:hash)
-// Note: We'll eventually move this to the root of your server so links look like "yoursite.com/Abc1234"
+// Route 3: Get detailed analytics for a specific link
+// Must be placed before /:hash to ensure the router doesn't treat 'analytics' as a hash
+router.get('/:hash/analytics', protect, getAnalytics);
+
+// Route 3: Redirect to the original URL
 router.get('/:hash', redirectUrl);
 
 module.exports = router;
