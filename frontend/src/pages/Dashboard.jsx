@@ -7,6 +7,9 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Safely pull the backend URL from the environment, defaulting to localhost for local development
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
     useEffect(() => {
         const fetchLinks = async () => {
             try {
@@ -57,9 +60,9 @@ const Dashboard = () => {
                                         </a>
                                     </td>
                                     <td style={{ padding: '12px' }}>
-                                        {/* Suggestion 1: Clickable short link hitting your backend port 4000 */}
+                                        {/* Now using the environment variable instead of hardcoded localhost */}
                                         <a 
-                                            href={`http://localhost:4000/api/url/${link.shortUrl}`} 
+                                            href={`${backendUrl}/api/url/${link.shortUrl}`} 
                                             target="_blank" 
                                             rel="noreferrer" 
                                             style={{ color: '#007bff', fontWeight: 'bold', textDecoration: 'none' }}
@@ -76,7 +79,6 @@ const Dashboard = () => {
                                         {new Date(link.createdAt).toLocaleDateString()}
                                     </td>
                                     <td style={{ padding: '12px' }}>
-                                        {/* Suggestion 2: Prepped React Router Link for Phase 5 */}
                                         <Link 
                                             to={`/analytics/${link.shortUrl}`} 
                                             style={{ padding: '5px 10px', backgroundColor: '#e9ecef', border: '1px solid #ccc', borderRadius: '4px', textDecoration: 'none', color: '#333', fontSize: '0.9rem' }}

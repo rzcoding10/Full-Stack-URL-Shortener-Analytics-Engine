@@ -9,7 +9,7 @@ const app = express();
 
 // --- 1. MIDDLEWARE ---
 app.use(helmet());
-app.use(cors({ credentials: true, origin: true }));
+app.use(cors({origin: process.env.CLIENT_URL,credentials: true,}));
 app.use(express.json()); // Replaces body-parser
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
