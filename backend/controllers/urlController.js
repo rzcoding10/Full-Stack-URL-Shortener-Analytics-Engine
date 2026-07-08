@@ -18,7 +18,7 @@ exports.createShortLink = asyncHandler(async (req, res) => {
     const userId = req.user ? req.user._id : null;
 
     const newLink = await createUniqueLink(originalUrl, userId);
-    const fullShortUrl = `${req.protocol}://${req.get("host")}/${newLink.shortUrl}`;
+    const fullShortUrl =`${req.protocol}://${req.get("host")}/api/url/${newLink.shortUrl}`;
 
     res.status(201).json({
         success: true,

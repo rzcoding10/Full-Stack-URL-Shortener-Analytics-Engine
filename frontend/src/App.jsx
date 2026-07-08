@@ -1,21 +1,21 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
+import Home from "./pages/Home"; // Make sure to import it
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import ProtectedRoute from "./components/ProtectedRoute"; // Add this
+import ProtectedRoute from "./components/ProtectedRoute"; 
 
 function App() {
   return (
     <>
       <Navbar /> 
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/" element={<Home />} /> {/* Changed this from Navigate */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
-        {/* Wrap Dashboard in ProtectedRoute */}
         <Route 
             path="/dashboard" 
             element={
