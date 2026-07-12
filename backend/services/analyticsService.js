@@ -1,10 +1,9 @@
 const UAParser = require('ua-parser-js');
-const mongoose = require('mongoose'); // 1. Added mongoose for the ObjectId casting
+const mongoose = require('mongoose');
 const Click = require('../models/Click');
 const Link = require('../models/Link');
 
 exports.trackClick = async (linkId, ipAddress, userAgentString, referrer) => {
-    // 1. Parse the user agent
     const parser = new UAParser();
     const result = parser.setUA(userAgentString).getResult();
 
@@ -13,7 +12,6 @@ exports.trackClick = async (linkId, ipAddress, userAgentString, referrer) => {
     const device = result.device.type || 'desktop'; 
     const finalReferrer = referrer || 'Direct';
 
-    // 2. Perform both database writes concurrently
     await Promise.all([
         Click.create({
             linkId,
@@ -30,7 +28,6 @@ exports.trackClick = async (linkId, ipAddress, userAgentString, referrer) => {
     ]);
 };
 
-// 2. The new Aggregation Engine
 exports.getLinkMetrics = async (linkId) => {
     const metrics = await Click.aggregate([
         { $match: { linkId: new mongoose.Types.ObjectId(linkId) } },
@@ -48,7 +45,6 @@ exports.getLinkMetrics = async (linkId) => {
                     { $group: { _id: "$device", clicks: { $sum: 1 } } },
                     { $sort: { clicks: -1 } }
                 ],
-                // 🎯 The Time Series addition
                 dailyClicks: [
                     {
                         $group: {
@@ -58,7 +54,7 @@ exports.getLinkMetrics = async (linkId) => {
                             clicks: { $sum: 1 }
                         }
                     },
-                    { $sort: { "_id": 1 } } // Sort by date ascending
+                    { $sort: { "_id": 1 } }
                 ]
             }
         }

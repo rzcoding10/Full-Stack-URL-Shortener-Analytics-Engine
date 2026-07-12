@@ -5,7 +5,7 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true); // Added loading state
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const checkUser = async () => {
@@ -13,9 +13,9 @@ export const AuthProvider = ({ children }) => {
                 const data = await getProfile();
                 setUser(data.user);
             } catch (err) {
-                setUser(null); // User is not authenticated
+                setUser(null);
             } finally {
-                setLoading(false); // Auth check complete
+                setLoading(false);
             }
         };
 
@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={{ user, loading, loginUser, logoutUser }}>
-            {!loading && children} {/* Don't render until auth check finishes */}
+            {!loading && children}
         </AuthContext.Provider>
     );
 };

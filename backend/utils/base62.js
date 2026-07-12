@@ -1,5 +1,3 @@
-// utils/base62.js
-
 const generateShortCode = (length = 7) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';

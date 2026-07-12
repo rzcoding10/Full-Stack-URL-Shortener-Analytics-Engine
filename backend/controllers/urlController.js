@@ -2,7 +2,6 @@ const asyncHandler = require('express-async-handler');
 const Link = require('../models/Link.js');
 const { isValidUrl } = require('../utils/validateUrl');
 
-// Import the services
 const { createUniqueLink } = require('../services/urlService');
 const { trackClick, getLinkMetrics } = require('../services/analyticsService');
 
@@ -72,7 +71,6 @@ exports.getUserLinks = asyncHandler(async (req, res) => {
 exports.getAnalytics = asyncHandler(async (req, res) => {
     const { hash } = req.params;
     
-    // Find the link
     const link = await Link.findOne({ shortUrl: hash });
     
     if (!link) {
@@ -80,13 +78,11 @@ exports.getAnalytics = asyncHandler(async (req, res) => {
         throw new Error('Link not found');
     }
 
-    // Verify ownership
     if (!req.user || link.userId?.toString() !== req.user._id.toString()) {
         res.status(403);
         throw new Error('Not authorized to view these analytics');
     }
 
-    // Fetch aggregated metrics
     const metrics = await getLinkMetrics(link._id);
 
     res.status(200).json({

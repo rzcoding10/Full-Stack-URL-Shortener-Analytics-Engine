@@ -20,8 +20,8 @@ const Login = () => {
         
         try {
             const data = await login({ email, password });
-            loginUser(data.user); // Update global state
-            navigate('/dashboard'); // Send them to the protected area
+            loginUser(data.user);
+            navigate('/dashboard');
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to login. Please check your credentials.');
         } finally {

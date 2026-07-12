@@ -5,7 +5,7 @@ const clickSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Link',
         required: true,
-        index: true // 🎯 Critical for aggregating analytics by link
+        index: true
     },
     ipAddress: {
         type: String
@@ -29,7 +29,7 @@ const clickSchema = new mongoose.Schema({
     clickedAt: {
         type: Date,
         default: Date.now,
-        index: true // 🎯 Added for fast time-series charting later
+        index: true
     }
 });
 

@@ -8,13 +8,13 @@ const linkSchema = new mongoose.Schema({
     shortUrl: {
         type: String,
         required: true,
-        unique: true // unique: true automatically creates an index in MongoDB
+        unique: true
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         default: null,
-        index: true // 🎯 Fast lookups for dashboard queries
+        index: true
     },
     totalClicks: {
         type: Number,
@@ -31,7 +31,7 @@ const linkSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        index: true // 🎯 Fast sorting by creation date
+        index: true
     }
 });
 

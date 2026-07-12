@@ -10,19 +10,16 @@ export const register = async (userData) => {
     return response.data;
 };
 
-// FIXED: Changed from api.post to api.get to match your authRoutes.js
 export const logout = async () => {
     const response = await api.get('/auth/logout');
     return response.data;
 };
 
-// ADDED: To check if a user is still logged in after a page refresh
 export const getProfile = async () => {
     const response = await api.get('/auth/profile');
     return response.data;
 };
 
-// ADDED: For your clean cascading delete feature!
 export const deleteAccount = async () => {
     const response = await api.delete('/auth/delete-account');
     return response.data;

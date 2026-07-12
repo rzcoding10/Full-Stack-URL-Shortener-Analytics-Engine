@@ -10,15 +10,14 @@ const Navbar = () => {
 
     const handleLogout = async () => {
         try {
-            await logout(); // Calls your backend to clear the secure cookie
-            logoutUser();   // Clears the React context state
+            await logout();
+            logoutUser();
             navigate('/login');
         } catch {
             // TODO: replace with toast notification
         }
     };
 
-    // Safely get the first initial for the avatar
     const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : 'U';
 
     return (

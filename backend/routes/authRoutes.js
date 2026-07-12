@@ -7,7 +7,6 @@ router.post('/register', register);
 router.post('/login', login);
 router.get('/logout', logout);
 
-// Protected routes (require login)
 router.get('/profile', protect, getProfile);
 router.delete('/delete-account', protect, deleteAccount);
 

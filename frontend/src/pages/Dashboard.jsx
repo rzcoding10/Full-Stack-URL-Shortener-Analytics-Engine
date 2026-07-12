@@ -31,11 +31,9 @@ const Dashboard = () => {
         fetchLinks();
     }, []);
 
-    // Summary Statistics
     const totalClicks = links.reduce((sum, link) => sum + (link.totalClicks || 0), 0);
     const averageClicks = links.length ? (totalClicks / links.length).toFixed(1) : 0;
     
-    // Search Filter
     const filteredLinks = links.filter((link) => {
     const query = searchTerm.toLowerCase();
 
@@ -61,7 +59,6 @@ const Dashboard = () => {
         }
     };
 
-    // Helper to format long URLs cleanly (removes https:// and www.)
     const formatUrl = (url) => {
         try {
             const urlObj = new URL(url);
@@ -110,7 +107,6 @@ const Dashboard = () => {
                 )}
 
                 {links.length === 0 && !error ? (
-                    /* Premium Empty State */
                     <div className="bg-white rounded-2xl border border-slate-200 border-dashed p-12 text-center shadow-sm">
                         <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
                             <FiLink />

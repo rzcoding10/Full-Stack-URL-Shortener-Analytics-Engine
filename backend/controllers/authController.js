@@ -5,14 +5,12 @@ const Click = require('../models/Click');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// --- BASE COOKIE CONFIGURATION ---
 const baseCookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
 };
 
-// --- HELPER: Generate JWT & Set Cookie ---
 const sendTokenResponse = (user, statusCode, res, message) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
         expiresIn: '30d'
